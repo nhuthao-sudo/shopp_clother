@@ -342,23 +342,48 @@ const Cart = () => {
                 Tiến hành thanh toán
               </Button>
 
-              {/* Promo Code */}
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
-                  <Discount sx={{ fontSize: 16, mr: 0.5 }} />
-                  Mã giảm giá
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField
-                    placeholder="Nhập mã giảm giá"
-                    size="small"
-                    fullWidth
-                  />
-                  <Button variant="outlined" size="small">
-                    Áp dụng
-                  </Button>
-                </Box>
-              </Box>
+
+
+
+
+
+
+{/* Promo Code */}
+<Box sx={{ mt: 2 }}>
+  <Typography variant="body2" sx={{ mb: 1, fontWeight: 'medium' }}>
+    <Discount sx={{ fontSize: 16, mr: 0.5 }} />
+    Mã giảm giá
+  </Typography>
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    <TextField
+      placeholder="Nhập mã giảm giá"
+      size="small"
+      fullWidth
+      sx={{
+        '& .MuiOutlinedInput-root': {
+          height: '40px', // Đồng bộ chiều cao với button
+        }
+      }}
+    />
+    <Button 
+      variant="outlined" 
+      size="small"
+      sx={{ 
+        minWidth: '80px',
+        height: '40px', // Đồng bộ chiều cao với input
+        whiteSpace: 'nowrap'
+      }}
+    >
+      Áp dụng
+    </Button>
+  </Box>
+</Box>
+
+
+
+
+
+              
 
               {/* Shipping Info */}
               <Box sx={{ mt: 3, p: 2, backgroundColor: 'grey.50', borderRadius: 1 }}>

@@ -64,6 +64,7 @@ const Products = ({
   const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
   const [wishlist, setWishlist] = useState([]);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', type: 'success' });
+  const [hasLoaded, setHasLoaded] = useState(false); // Thêm state để kiểm soát việc load
 
   const categories = [
     { value: 'all', label: 'Tất cả sản phẩm' },
@@ -108,8 +109,10 @@ const Products = ({
     }
   }, []);
 
-  // Kết hợp sản phẩm từ props và localStorage
+  // Kết hợp sản phẩm từ props và localStorage - CHỈ CHẠY 1 LẦN
   useEffect(() => {
+    if (hasLoaded) return; // Chỉ chạy 1 lần
+
     console.log('Products component received:', { 
       productsCount: products.length, 
       searchTerm, 
@@ -124,15 +127,34 @@ const Products = ({
       const savedProducts = localStorage.getItem('adminProducts');
       const adminProducts = savedProducts ? JSON.parse(savedProducts) : [];
       
-      // Kết hợp sản phẩm từ props và localStorage
-      const combinedProducts = [...products, ...adminProducts];
-      console.log('Combined products:', combinedProducts.length);
+      // Tạo Set để loại bỏ duplicate dựa trên ID
+      const productMap = new Map();
+      
+      // Thêm products từ props trước
+      products.forEach(product => {
+        if (product.id) {
+          productMap.set(product.id, product);
+        }
+      });
+      
+      // Thêm admin products, không ghi đè nếu đã tồn tại
+      adminProducts.forEach(product => {
+        if (product.id && !productMap.has(product.id)) {
+          productMap.set(product.id, product);
+        }
+      });
+      
+      const combinedProducts = Array.from(productMap.values());
+      console.log('Combined products (no duplicates):', combinedProducts.length);
+      
       setAllProducts(combinedProducts);
       setFilteredProducts(combinedProducts);
+      setHasLoaded(true); // Đánh dấu đã load xong
     } catch (error) {
       console.error('Error loading products from localStorage:', error);
       setAllProducts(products);
       setFilteredProducts(products);
+      setHasLoaded(true);
     }
     
     // Load search history từ localStorage
@@ -144,10 +166,17 @@ const Products = ({
     } catch (error) {
       console.error('Error loading search history:', error);
     }
-  }, [products, searchTerm, category]);
+  }, [products, searchTerm, category, hasLoaded]); // Thêm hasLoaded vào dependency
+
+  // Reset hasLoaded khi products thay đổi (khi chuyển trang)
+  useEffect(() => {
+    setHasLoaded(false);
+  }, [products]);
 
   // Lọc sản phẩm
   useEffect(() => {
+    if (allProducts.length === 0) return;
+
     console.log('Filtering products...');
     let result = [...allProducts];
 
@@ -208,7 +237,7 @@ const Products = ({
         result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
         break;
       case 'newest':
-        result.sort((a, b) => (b.id || 0) - (a.id || 0));
+        result.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
         break;
       default:
         break;
@@ -358,6 +387,16 @@ const Products = ({
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  // Reset toàn bộ state (dùng khi chuyển trang)
+  const handleResetState = () => {
+    setHasLoaded(false);
+    setInternalSearchTerm('');
+    setSelectedCategory('all');
+    setPriceRange('all');
+    setSortBy('name');
+    setCurrentPage(1);
   };
 
   // Phân trang

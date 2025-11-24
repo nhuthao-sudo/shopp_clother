@@ -407,33 +407,251 @@ const ProductDetail = () => {
               </Select>
             </FormControl>
 
-            {/* Màu sắc */}
-            <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>Màu sắc</InputLabel>
-              <Select
-                value={selectedColor}
-                label="Màu sắc"
-                onChange={(e) => setSelectedColor(e.target.value)}
-              >
-                {(product.colors || ["Đen", "Trắng", "Xanh", "Hồng"]).map((color) => (
-                  <MenuItem key={color} value={color}>{color}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            {/* Màu sắc - Phiên bản hình tròn */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold">
+                  Màu sắc
+                </Typography>
+                {selectedColor && (
+                  <Typography variant="body2" color="primary">
+                    Đã chọn: {selectedColor}
+                  </Typography>
+                )}
+              </Box>
+              
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                {(product.colors || ["Đen", "Trắng", "Xanh dương", "Hồng", "Xanh lá", "Đỏ"]).map((color) => {
+                  const getColorStyle = (colorName) => {
+                    const colorStyles = {
+                      'Đen': { bgcolor: '#000000', border: '#666666' },
+                      'Trắng': { bgcolor: '#FFFFFF', border: '#e0e0e0' },
+                      'Xanh dương': { bgcolor: '#2196F3', border: '#1976D2' },
+                      'Xanh': { bgcolor: '#2196F3', border: '#1976D2' },
+                      'Xanh lá': { bgcolor: '#4CAF50', border: '#388E3C' },
+                      'Đỏ': { bgcolor: '#F44336', border: '#D32F2F' },
+                      'Hồng': { bgcolor: '#E91E63', border: '#C2185B' },
+                      'Tím': { bgcolor: '#9C27B0', border: '#7B1FA2' },
+                      'Vàng': { bgcolor: '#FFEB3B', border: '#FBC02D' },
+                      'Cam': { bgcolor: '#FF9800', border: '#F57C00' },
+                      'Nâu': { bgcolor: '#795548', border: '#5D4037' },
+                      'Xám': { bgcolor: '#9E9E9C', border: '#616161' },
+                    };
+                    return colorStyles[colorName] || { bgcolor: '#CCCCCC', border: '#999999' };
+                  };
 
-            {/* Số lượng */}
-            <FormControl fullWidth sx={{ mb: 4 }}>
-              <InputLabel>Số lượng</InputLabel>
-              <Select 
-                value={quantity} 
-                label="Số lượng" 
-                onChange={(e) => setQuantity(e.target.value)}
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                  <MenuItem key={n} value={n}>{n}</MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                  const colorStyle = getColorStyle(color);
+                  const isSelected = selectedColor === color;
+                  
+                  return (
+                    <Box
+                      key={color}
+                      sx={{
+                        position: 'relative',
+                        cursor: 'pointer',
+                        margin: '4px',
+                        '&:hover .color-tooltip': {
+                          opacity: 1,
+                          visibility: 'visible',
+                        },
+                      }}
+                      onClick={() => setSelectedColor(color)}
+                    >
+                      {/* Vòng tròn màu chính */}
+                      <Box
+                        sx={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: '50%',
+                          backgroundColor: colorStyle.bgcolor,
+                          border: `2px solid ${isSelected ? '#1976d2' : colorStyle.border}`,
+                          boxShadow: isSelected 
+                            ? '0 0 0 3px rgba(25, 118, 210, 0.3), 0 2px 8px rgba(0,0,0,0.2)' 
+                            : '0 1px 4px rgba(0,0,0,0.1)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.2s ease-in-out',
+                          '&:hover': {
+                            transform: 'scale(1.15)',
+                            boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+                          },
+                        }}
+                      >
+                        {/* Icon check */}
+                        {isSelected && (
+                          <CheckCircle 
+                            sx={{ 
+                              fontSize: 22, 
+                              color: ['Trắng', 'Vàng', 'Kem'].includes(color) ? '#000000' : '#FFFFFF',
+                              filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))'
+                            }} 
+                          />
+                        )}
+                      </Box>
+                      
+                      {/* Tooltip hiển thị tên màu khi hover */}
+                      <Box
+                        className="color-tooltip"
+                        sx={{
+                          position: 'absolute',
+                          bottom: '100%',
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          bgcolor: 'rgba(0,0,0,0.8)',
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: 1,
+                          fontSize: '12px',
+                          whiteSpace: 'nowrap',
+                          opacity: 0,
+                          visibility: 'hidden',
+                          transition: 'all 0.2s ease-in-out',
+                          mb: 1,
+                          '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            top: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            border: '4px solid transparent',
+                            borderTopColor: 'rgba(0,0,0,0.8)',
+                          }
+                        }}
+                      >
+                        {color}
+                      </Box>
+                      
+                      {/* Tên màu bên dưới (chỉ hiển thị trên mobile) */}
+                      <Typography 
+                        variant="caption" 
+                        align="center" 
+                        sx={{ 
+                          display: { xs: 'block', md: 'none' },
+                          mt: 0.5,
+                          fontWeight: isSelected ? 'bold' : 'normal',
+                          color: isSelected ? 'primary.main' : 'text.secondary',
+                          fontSize: '10px',
+                        }}
+                      >
+                        {color}
+                      </Typography>
+                    </Box>
+                  );
+                })}
+              </Stack>
+            </Box>
+
+{/* Số lượng - Phiên bản nhập trực tiếp */}
+<Box sx={{ mb: 4 }}>
+  <Typography variant="subtitle1" gutterBottom fontWeight="bold">
+    Số lượng
+  </Typography>
+  <Box sx={{ display: 'flex', alignItems: 'center', maxWidth: 200 }}>
+    {/* Nút giảm */}
+    <Button
+      variant="outlined"
+      sx={{
+        minWidth: 48,
+        width: 48,
+        height: 48,
+        borderRadius: '8px 0 0 8px',
+        borderRight: 'none',
+        fontSize: '18px',
+        fontWeight: 'bold',
+        '&:hover': {
+          backgroundColor: 'action.hover',
+        }
+      }}
+      onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+      disabled={quantity <= 1}
+    >
+      −
+    </Button>
+    
+    {/* Ô nhập số lượng */}
+    <TextField
+      value={quantity}
+      onChange={(e) => {
+        const value = e.target.value;
+        // Cho phép nhập rỗng để xóa
+        if (value === '') {
+          setQuantity('');
+          return;
+        }
+        
+        const numValue = parseInt(value);
+        if (!isNaN(numValue)) {
+          setQuantity(Math.max(1, Math.min(99, numValue)));
+        }
+      }}
+      onBlur={(e) => {
+        // Khi blur, nếu ô trống thì set về 1
+        if (e.target.value === '') {
+          setQuantity(1);
+        }
+      }}
+      onKeyPress={(e) => {
+        // Chỉ cho phép nhập số
+        if (!/[0-9]/.test(e.key)) {
+          e.preventDefault();
+        }
+      }}
+      inputProps={{
+        style: { 
+          textAlign: 'center',
+          padding: '12px 8px',
+          fontSize: '16px',
+          fontWeight: 'bold'
+        },
+        // Xóa mũi tên lên xuống
+        type: 'text', // Đổi từ 'number' sang 'text' để ẩn mũi tên
+        inputMode: 'numeric', // Vẫn hiện bàn phím số trên mobile
+        pattern: '[0-9]*' // Pattern cho số
+      }}
+      sx={{
+        width: 80,
+        '& .MuiOutlinedInput-root': {
+          borderRadius: 0,
+          '&:hover fieldset': {
+            borderColor: 'primary.main',
+          },
+          '&.Mui-focused fieldset': {
+            borderColor: 'primary.main',
+            borderWidth: 2,
+          },
+          '& fieldset': {
+            borderLeft: 'none',
+            borderRight: 'none',
+            borderColor: 'divider',
+          },
+        },
+      }}
+      variant="outlined"
+    />
+    
+    {/* Nút tăng */}
+    <Button
+      variant="outlined"
+      sx={{
+        minWidth: 48,
+        width: 48,
+        height: 48,
+        borderRadius: '0 8px 8px 0',
+        borderLeft: 'none',
+        fontSize: '18px',
+        fontWeight: 'bold',
+        '&:hover': {
+          backgroundColor: 'action.hover',
+        }
+      }}
+      onClick={() => setQuantity(prev => Math.min(99, prev + 1))}
+      disabled={quantity >= 99}
+    >
+      +
+    </Button>
+  </Box>
+</Box>
 
             {/* Nút hành động */}
             <Stack direction="row" spacing={2} sx={{ mb: 3 }}>

@@ -1,5 +1,5 @@
 // ProductManagement.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -136,8 +136,8 @@ const ProductManagement = () => {
       {/* Form thêm / sửa sản phẩm */}
       {editingProduct && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 transition-all">
-          <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg animate-fadeIn">
-            <h3 className="text-2xl font-bold mb-4 text-gray-800 text-center">
+          <div className="relative bg-white p-8 rounded-2xl shadow-2xl w-full max-w-4xl animate-fadeIn">
+            <h3 className="text-2xl font-bold mb-6 text-gray-800 text-center">
               {editingProduct.id ? 'Sửa sản phẩm' : 'Thêm sản phẩm'}
             </h3>
 
@@ -164,8 +164,58 @@ const ProductForm = ({ product, onSave, onCancel }) => {
     featured: product.featured || false
   });
 
+  const [imagePreview, setImagePreview] = useState(product.image || '');
+  const fileInputRef = useRef(null);
+
+  // Xử lý khi chọn file ảnh
+  const handleImageUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      // Kiểm tra loại file
+      if (!file.type.startsWith('image/')) {
+        alert('Vui lòng chọn file ảnh!');
+        return;
+      }
+
+      // Kiểm tra kích thước file (tối đa 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Kích thước ảnh không được vượt quá 5MB!');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const imageUrl = e.target.result;
+        setImagePreview(imageUrl);
+        setFormData(prev => ({ ...prev, image: imageUrl }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // Xóa ảnh đã chọn
+  const handleRemoveImage = () => {
+    setImagePreview('');
+    setFormData(prev => ({ ...prev, image: '' }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Kích hoạt input file khi click vào vùng upload
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Validate ảnh
+    if (!formData.image) {
+      alert('Vui lòng chọn hình ảnh cho sản phẩm!');
+      return;
+    }
+
     onSave({
       ...formData,
       price: parseInt(formData.price),
@@ -175,90 +225,215 @@ const ProductForm = ({ product, onSave, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto">
-      <input
-        type="text"
-        placeholder="Tên sản phẩm"
-        className="w-full p-3 border border-gray-300 rounded mb-3 focus:ring-2 focus:ring-blue-500"
-        value={formData.name}
-        onChange={(e) => setFormData({...formData, name: e.target.value})}
-        required
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Cột trái - Thông tin sản phẩm */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tên sản phẩm *
+            </label>
+            <input
+              type="text"
+              placeholder="Nhập tên sản phẩm"
+              className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              required
+            />
+          </div>
 
-      <input
-        type="number"
-        placeholder="Giá"
-        className="w-full p-3 border border-gray-300 rounded mb-3 focus:ring-2 focus:ring-blue-500"
-        value={formData.price}
-        onChange={(e) => setFormData({...formData, price: e.target.value})}
-        required
-      />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Giá *
+              </label>
+              <input
+                type="number"
+                placeholder="0"
+                className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={formData.price}
+                onChange={(e) => setFormData({...formData, price: e.target.value})}
+                required
+                min="0"
+              />
+            </div>
 
-      <input
-        type="number"
-        placeholder="Số lượng tồn kho"
-        className="w-full p-3 border border-gray-300 rounded mb-3 focus:ring-2 focus:ring-blue-500"
-        value={formData.stock}
-        onChange={(e) => setFormData({...formData, stock: e.target.value})}
-        required
-      />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tồn kho *
+              </label>
+              <input
+                type="number"
+                placeholder="0"
+                className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={formData.stock}
+                onChange={(e) => setFormData({...formData, stock: e.target.value})}
+                required
+                min="0"
+              />
+            </div>
+          </div>
 
-      <input
-        type="text"
-        placeholder="URL hình ảnh"
-        className="w-full p-3 border border-gray-300 rounded mb-3 focus:ring-2 focus:ring-blue-500"
-        value={formData.image}
-        onChange={(e) => setFormData({...formData, image: e.target.value})}
-        required
-      />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Danh mục *
+            </label>
+            <select
+              className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={formData.category}
+              onChange={(e) => setFormData({...formData, category: e.target.value})}
+              required
+            >
+              <option value="">Chọn danh mục</option>
+              <option value="Áo">Áo</option>
+              <option value="Quần">Quần</option>
+              <option value="Phụ kiện">Phụ kiện</option>
+              <option value="Giày">Giày</option>
+            </select>
+          </div>
 
-      <textarea
-        placeholder="Mô tả sản phẩm"
-        className="w-full p-3 border border-gray-300 rounded mb-3 focus:ring-2 focus:ring-blue-500"
-        value={formData.description}
-        onChange={(e) => setFormData({...formData, description: e.target.value})}
-        rows="3"
-        required
-      />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Mô tả sản phẩm *
+            </label>
+            <textarea
+              placeholder="Nhập mô tả chi tiết về sản phẩm..."
+              className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              rows="4"
+              required
+            />
+          </div>
 
-      <select
-        className="w-full p-3 border border-gray-300 rounded mb-3 focus:ring-2 focus:ring-blue-500"
-        value={formData.category}
-        onChange={(e) => setFormData({...formData, category: e.target.value})}
-        required
-      >
-        <option value="">Chọn danh mục</option>
-        <option value="Áo">Áo</option>
-        <option value="Quần">Quần</option>
-        <option value="Phụ kiện">Phụ kiện</option>
-        <option value="Giày">Giày</option>
-      </select>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="featured"
+              className="mr-2 w-4 h-4 text-blue-500 rounded focus:ring-blue-500"
+              checked={formData.featured}
+              onChange={(e) => setFormData({...formData, featured: e.target.checked})}
+            />
+            <label htmlFor="featured" className="text-gray-700 text-sm">
+              Sản phẩm nổi bật (hiển thị trên trang chủ)
+            </label>
+          </div>
+        </div>
 
-      <div className="flex items-center mb-4">
-        <input
-          type="checkbox"
-          id="featured"
-          className="mr-2"
-          checked={formData.featured}
-          onChange={(e) => setFormData({...formData, featured: e.target.checked})}
-        />
-        <label htmlFor="featured" className="text-gray-700">
-          Sản phẩm nổi bật (hiển thị trên trang chủ)
-        </label>
+        {/* Cột phải - Upload ảnh và preview */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Hình ảnh sản phẩm *
+            </label>
+            
+            {/* Vùng upload ảnh */}
+            <div 
+              onClick={handleUploadClick}
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 transition-colors"
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              
+              {imagePreview ? (
+                <div className="relative">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="w-full h-48 object-cover rounded-lg mx-auto"
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className="py-8">
+                  <div className="text-gray-400 mb-2">
+                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <p className="text-gray-600 mb-1">Nhấn để tải lên hình ảnh</p>
+                  <p className="text-gray-400 text-sm">PNG, JPG, JPEG (Tối đa 5MB)</p>
+                </div>
+              )}
+            </div>
+
+{/* URL ảnh thay thế */}
+<div className="mt-3">
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Hoặc nhập URL hình ảnh
+  </label>
+  <input
+    type="url"
+    placeholder="https://example.com/image.jpg"
+    className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+    value={formData.image}
+    onChange={(e) => {
+      const newImageUrl = e.target.value;
+      setFormData({...formData, image: newImageUrl});
+      setImagePreview(newImageUrl);
+    }}
+    onPaste={(e) => {
+      // Xử lý khi người dùng dán URL
+      const pastedText = e.clipboardData.getData('text');
+      setTimeout(() => {
+        setImagePreview(pastedText);
+      }, 100);
+    }}
+    onBlur={(e) => {
+      // Xử lý khi rời khỏi ô input
+      if (e.target.value) {
+        setImagePreview(e.target.value);
+      }
+    }}
+  />
+</div>
+
+
+
+          </div>
+
+          {/* Preview ảnh nhỏ */}
+          {imagePreview && (
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+              <img 
+                src={imagePreview} 
+                alt="Product preview" 
+                className="w-20 h-20 object-cover rounded border"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="flex justify-end gap-3">
-        <button 
-          type="submit" 
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
-        >
-          Lưu
-        </button>
+      {/* Nút hành động */}
+      <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
         <button 
           type="button" 
           onClick={onCancel}
-          className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+          className="px-6 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-colors"
         >
           Hủy
+        </button>
+        <button 
+          type="submit" 
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors"
+        >
+          {product.id ? 'Cập nhật' : 'Thêm sản phẩm'}
         </button>
       </div>
     </form>
